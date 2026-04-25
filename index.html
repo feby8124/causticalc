@@ -1249,6 +1249,11 @@ function toggleTheme() {
    INIT
 ══════════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
+  // Register Service Worker for PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed', err));
+  }
+
   // Restore saved theme preference
   let saved = 'dark';
   try { saved = localStorage.getItem('naoh-theme') || 'dark'; } catch(e) {}
