@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NaOH Process Calculator</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#070d18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   THEME TOKENS
+══════════════════════════════════════════ */
+:root[data-theme="dark"] {
+  --bg:       #070d18;
+  --bg2:      #0c1524;
+  --card:     #0f1c2e;
+  --border:   #1a2d45;
+  --b2:       #253d58;
+  --cyan:     #00d4ff;
+  --cdim:     rgba(0,212,255,0.09);
+  --amber:    #f5a623;
+  --adim:     rgba(245,166,35,0.09);
+  --green:    #0fe8a0;
+  --gdim:     rgba(15,232,160,0.09);
+  --purple:   #a78bfa;
+  --pdim:     rgba(167,139,250,0.09);
+  --blue:     #60a5fa;
+  --bdim:     rgba(96,165,250,0.07);
+  --text:     #dde8f5;
+  --t2:       #8aa0bb;
+  --t3:       #3f5572;
+  --shadow:   0 4px 24px rgba(0,0,0,0.5);
+  --grid-ln:  rgba(0,212,255,0.022);
+  --toggle-bg:#1a2d45;
+  --toggle-icon: '☀️';
+}
+
+:root[data-theme="light"] {
+  --bg:       #f0f4fa;
+  --bg2:      #ffffff;
+  --card:     #ffffff;
+  --border:   #d0daea;
+  --b2:       #b0c4de;
+  --cyan:     #0077cc;
+  --cdim:     rgba(0,119,204,0.08);
+  --amber:    #c47d00;
+  --adim:     rgba(196,125,0,0.08);
+  --green:    #00875a;
+  --gdim:     rgba(0,135,90,0.08);
+  --purple:   #6d28d9;
+  --pdim:     rgba(109,40,217,0.08);
+  --blue:     #2563eb;
+  --bdim:     rgba(37,99,235,0.07);
+  --text:     #0f1c2e;
+  --t2:       #3f5572;
+  --t3:       #8aa0bb;
+  --shadow:   0 4px 24px rgba(0,0,0,0.08);
+  --grid-ln:  rgba(0,119,204,0.04);
+  --toggle-bg:#d0daea;
+  --toggle-icon: '🌙';
+}
+
+/* ══════════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--grid-ln) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-ln) 1px, transparent 1px);
+  background-size: 48px 48px;
+  transition: background-image 0.3s ease;
+}
+
+/* ══════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════ */
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px 72px;
+}
+
+.g2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 700px) {
+  .g2 { grid-template-columns: 1fr; }
+  .page { padding: 0 16px 60px; }
+}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  padding: 20px 0 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* Subtle backdrop blur for sticky header */
+header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: -1;
+}
+
+.brand { display: flex; align-items: center; gap: 13px; }
+
+.bicon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #00d4ff, #0055ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 0 22px rgba(0,160,255,0.35);
+  transition: box-shadow 0.3s ease;
+}
+
+[data-theme="light"] .bicon {
+  box-shadow: 0 4px 16px rgba(0,100,200,0.25);
+}
+
+.brand h1 {
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--text) 20%, var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.brand p {
+  font-size: 10px;
+  color: var(--t3);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+/* Header right controls */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Status badge */
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--t2);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 10px;
+  letter-spacing: 0.5px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: blink 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+/* Theme toggle button */
+.theme-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--toggle-bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  transition: background 0.25s, border-color 0.25s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.08);
+  border-color: var(--cyan);
+}
+
+.theme-toggle:active { transform: scale(0.95); }
+
+/* ══════════════════════════════════════════
+   TABS
+══════════════════════════════════════════ */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 26px;
+  width: fit-content;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.tb {
+  padding: 9px 20px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--t2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.tb:hover { color: var(--text); background: var(--border); }
+
+.tb.on {
+  background: var(--cdim);
+  color: var(--cyan);
+  border-color: rgba(0,212,255,0.2);
+  box-shadow: 0 2px 10px rgba(0,212,255,0.08);
+}
+
+[data-theme="light"] .tb.on {
+  background: rgba(0,119,204,0.1);
+  border-color: rgba(0,119,204,0.25);
+  box-shadow: 0 2px 8px rgba(0,119,204,0.12);
+}
+
+.tb .tab-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Tab panels */
+.tp { display: none; animation: fadeUp 0.22s ease; }
+.tp.on { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════
+   SECTION HEADING
+══════════════════════════════════════════ */
+.sh {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--t3);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sh::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.sh .sh-icon { font-size: 13px; }
+
+/* ══════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════ */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  box-shadow: var(--shadow);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,212,255,0.18), transparent);
+  pointer-events: none;
+}
+
+[data-theme="light"] .card::before {
+  background: linear-gradient(90deg, transparent, rgba(0,119,204,0.15), transparent);
+}
+
+.card.cv {
+  background: linear-gradient(135deg, var(--cdim), rgba(0,212,255,0.02));
+  border-color: rgba(0,212,255,0.15);
+}
+
+.card.ca {
+  background: linear-gradient(135deg, var(--adim), rgba(245,166,35,0.01));
+  border-color: rgba(245,166,35,0.15);
+}
+
+[data-theme="light"] .card.ca {
+  border-color: rgba(196,125,0,0.2);
+}
+
+.card.cg {
+  background: linear-gradient(135deg, var(--gdim), rgba(15,232,160,0.01));
+  border-color: rgba(15,232,160,0.13);
+}
+
+[data-theme="light"] .card.cg {
+  border-color: rgba(0,135,90,0.18);
+}
+
+/* ══════════════════════════════════════════
+   INPUTS
+══════════════════════════════════════════ */
+.field { margin-bottom: 14px; }
+.field:last-of-type { margin-bottom: 0; }
+
+.field label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--t2);
+  margin-bottom: 7px;
+  letter-spacing: 0.6px;
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+}
+
+.field label .range-hint {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--t3);
+  letter-spacing: 0;
+  text-transform: none;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.iw {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.iw input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 48px 10px 13px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.3s, color 0.3s;
+}
+
+.iw input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+}
+
+[data-theme="light"] .iw input:focus {
+  box-shadow: 0 0 0 3px rgba(0,119,204,0.12);
+}
+
+.iw input[readonly] {
+  background: var(--gdim);
+  border-color: rgba(15,232,160,0.18);
+  color: var(--green);
+  cursor: default;
+}
+
+[data-theme="light"] .iw input[readonly] {
+  background: rgba(0,135,90,0.07);
+  border-color: rgba(0,135,90,0.2);
+}
+
+.ub {
+  position: absolute;
+  right: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--t3);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ══════════════════════════════════════════
+   RESULT ITEMS
+══════════════════════════════════════════ */
+.rg {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.ri {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s, transform 0.15s;
+}
+
+.ri:hover { transform: translateY(-1px); }
+
+.ri.rc { background: var(--cdim); border-color: rgba(0,212,255,0.2); }
+.ri.rc::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cyan); border-radius: 0 2px 2px 0; }
+
+.ri.ra { background: var(--adim); border-color: rgba(245,166,35,0.18); }
+.ri.ra::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--amber); border-radius: 0 2px 2px 0; }
+
+.ri.rg { background: var(--gdim); border-color: rgba(15,232,160,0.16); }
+.ri.rg::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--green); border-radius: 0 2px 2px 0; }
+
+.ri.rp { background: var(--pdim); border-color: rgba(167,139,250,0.16); }
+.ri.rp::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--purple); border-radius: 0 2px 2px 0; }
+
+.ri.rb { background: var(--bdim); border-color: rgba(96,165,250,0.18); }
+.ri.rb::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--blue); border-radius: 0 2px 2px 0; }
+
+.rl {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--t3);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-bottom: 6px;
+}
+
+.rv {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  color: var(--text);
+}
+
+.ri.rc .rv { color: var(--cyan); }
+.ri.ra .rv { color: var(--amber); }
+.ri.rg .rv { color: var(--green); }
+.ri.rp .rv { color: var(--purple); }
+.ri.rb .rv { color: var(--blue); }
+
+.ru {
+  font-size: 10px;
+  color: var(--t3);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 4px;
+}
+
+@keyframes numFlash {
+  from { opacity: 0.3; transform: translateY(-3px); }
+  to   { opacity: 1;   transform: translateY(0); }
+}
+.fl { animation: numFlash 0.25s ease; }
+
+/* ══════════════════════════════════════════
+   PIPE FLOW
+══════════════════════════════════════════ */
+.pipe {
+  display: flex;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.pb { flex: 1; padding: 16px 10px; text-align: center; }
+.pb + .pb { border-left: 1px solid var(--border); }
+
+.pbl {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-bottom: 6px;
+}
+
+.pbv {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.pbs {
+  font-size: 10px;
+  color: var(--t3);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 3px;
+}
+
+/* ══════════════════════════════════════════
+   REFERENCE TABLE
+══════════════════════════════════════════ */
+.rt {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+}
+
+.rt th {
+  background: var(--bg2);
+  color: var(--cyan);
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  transition: background 0.3s;
+}
+
+.rt td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--t2);
+  transition: background 0.15s, color 0.15s;
+}
+
+.rt tr:last-child td { border-bottom: none; }
+
+.rt tr:hover td {
+  background: var(--bg2);
+  color: var(--text);
+}
+
+.rt td:first-child { color: var(--cyan); font-weight: 600; }
+
+.rt tr.hl td {
+  background: rgba(0,212,255,0.05);
+  color: var(--text);
+}
+
+[data-theme="light"] .rt tr.hl td {
+  background: rgba(0,119,204,0.06);
+}
+
+/* ══════════════════════════════════════════
+   DIVIDER
+══════════════════════════════════════════ */
+.div { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ══════════════════════════════════════════
+   VALIDATION STATE
+══════════════════════════════════════════ */
+.iw input.err {
+  border-color: #ff4d6d;
+  box-shadow: 0 0 0 3px rgba(255,77,109,0.1);
+}
+
+.field-error {
+  font-size: 10px;
+  color: #ff4d6d;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 4px;
+  display: none;
+}
+
+.field-error.show { display: block; }
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+footer {
+  text-align: center;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--t3);
+  letter-spacing: 0.5px;
+  transition: border-color 0.3s;
+}
+
+/* ══════════════════════════════════════════
+   SCROLLBAR (dark mode only)
+══════════════════════════════════════════ */
+[data-theme="dark"] ::-webkit-scrollbar { width: 6px; height: 6px; }
+[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--bg2); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 3px; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: var(--t3); }
+
+/* ══════════════════════════════════════════
+   TOOLTIP
+══════════════════════════════════════════ */
+[data-tip] {
+  position: relative;
+  cursor: help;
+}
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 200;
+  box-shadow: var(--shadow);
+}
+
+[data-tip]:hover::after { opacity: 1; }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE TWEAKS
+══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .tabs { width: 100%; }
+  .tb   { flex: 1; justify-content: center; padding: 9px 10px; font-size: 12px; }
+  .rv   { font-size: 18px; }
+  .pbv  { font-size: 17px; }
+  .header-right .status-badge span { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="brand">
+    <div class="bicon" aria-hidden="true">⚗️</div>
+    <div>
+      <h1>NaOH Process Calculator</h1>
+      <p>Caustic Soda Industrial Suite</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-badge" aria-label="Application status: offline mode">
+      <div class="dot" aria-hidden="true"></div>
+      <span>OFFLINE</span>
+    </div>
+    <button
+      class="theme-toggle"
+      id="themeBtn"
+      onclick="toggleTheme()"
+      aria-label="Toggle dark/light mode"
+      title="Toggle dark / light mode"
+    >🌙</button>
+  </div>
+</header>
+
+<!-- ══ TABS ══ -->
+<div class="tabs" role="tablist" aria-label="Calculator sections">
+  <button class="tb on" role="tab" aria-selected="true"  aria-controls="tab-density" onclick="sw('density',this)">
+    <span class="tab-icon" aria-hidden="true">📐</span> Density
+  </button>
+  <button class="tb"    role="tab" aria-selected="false" aria-controls="tab-mixing"  onclick="sw('mixing',this)">
+    <span class="tab-icon" aria-hidden="true">🔀</span> Mixing
+  </button>
+  <button class="tb"    role="tab" aria-selected="false" aria-controls="tab-ref"     onclick="sw('ref',this)">
+    <span class="tab-icon" aria-hidden="true">📋</span> Reference
+  </button>
+</div>
+
+<!-- ══ DENSITY TAB ══ -->
+<div id="tab-density" class="tp on" role="tabpanel" aria-label="Density calculator">
+  <div class="g2">
+
+    <!-- Inputs -->
+    <div class="card ca">
+      <div class="sh"><span class="sh-icon" aria-hidden="true">⚙️</span> Inputs</div>
+
+      <div class="field">
+        <label for="d_wt">
+          NaOH Weight %
+          <span class="range-hint">0 – 55 WT%</span>
+        </label>
+        <div class="iw">
+          <input
+            type="number" id="d_wt" value="30.9"
+            min="0" max="55" step="0.1"
+            aria-label="NaOH weight percent (0 to 55)"
+            oninput="calcD()"
+          >
+          <span class="ub">WT%</span>
+        </div>
+        <div class="field-error" id="d_wt_err">Value must be between 0 and 55 WT%</div>
+      </div>
+
+      <div class="field">
+        <label for="d_temp">
+          Temperature
+          <span class="range-hint">0 – 80 °C</span>
+        </label>
+        <div class="iw">
+          <input
+            type="number" id="d_temp" value="25"
+            min="0" max="80" step="0.5"
+            aria-label="Temperature in Celsius (0 to 80)"
+            oninput="calcD()"
+          >
+          <span class="ub">°C</span>
+        </div>
+        <div class="field-error" id="d_temp_err">Value must be between 0 and 80 °C</div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card cv">
+      <div class="sh"><span class="sh-icon" aria-hidden="true">📊</span> Results</div>
+      <div class="rg">
+        <div class="ri rc" data-tip="Ratio of solution density to water density">
+          <div class="rl">Specific Gravity</div>
+          <div class="rv" id="d_spgr" aria-live="polite">—</div>
+          <div class="ru">dimensionless</div>
+        </div>
+        <div class="ri rc" data-tip="Mass per unit volume at given T">
+          <div class="rl">Density</div>
+          <div class="rv" id="d_den" aria-live="polite">—</div>
+          <div class="ru">kg / m³</div>
+        </div>
+        <div class="ri ra" data-tip="Mass of NaOH dissolved per litre">
+          <div class="rl">Concentration</div>
+          <div class="rv" id="d_conc" aria-live="polite">—</div>
+          <div class="ru">g / L</div>
+        </div>
+        <div class="ri ra" data-tip="Moles of NaOH per litre (MW = 40 g/mol)">
+          <div class="rl">Molarity</div>
+          <div class="rv" id="d_mol" aria-live="polite">—</div>
+          <div class="ru">mol / L</div>
+        </div>
+        <div class="ri rp" data-tip="Volume occupied by 1 kg of solution">
+          <div class="rl">Specific Volume</div>
+          <div class="rv" id="d_spv" aria-live="polite">—</div>
+          <div class="ru">L / kg</div>
+        </div>
+        <div class="ri rg" data-tip="Reference density extrapolated to 0 °C">
+          <div class="rl">Base Density (0 °C)</div>
+          <div class="rv" id="d_base" aria-live="polite">—</div>
+          <div class="ru">kg / m³</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MIXING TAB ══ -->
+<div id="tab-mixing" class="tp" role="tabpanel" aria-label="Mixing calculator">
+
+  <div class="g2" style="margin-bottom:18px">
+
+    <!-- Feed Solution -->
+    <div class="card ca">
+      <div class="sh"><span class="sh-icon" aria-hidden="true">🧪</span> Feed Solution</div>
+
+      <div class="field">
+        <label for="m_giv_wt">
+          Feed WT%
+          <span class="range-hint">0.1 – 55 WT%</span>
+        </label>
+        <div class="iw">
+          <input
+            type="number" id="m_giv_wt" value="48"
+            min="0.1" max="55" step="0.1"
+            aria-label="Feed solution weight percent"
+            oninput="calcM()"
+          >
+          <span class="ub">WT%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="m_giv_temp">
+          Temperature
+          <span class="range-hint">0 – 80 °C</span>
+        </label>
+        <div class="iw">
+          <input
+            type="number" id="m_giv_temp" value="25"
+            min="0" max="80" step="0.5"
+            aria-label="Feed solution temperature"
+            oninput="calcM()"
+          >
+          <span class="ub">°C</span>
+        </div>
+      </div>
+
+      <div class="div"></div>
+
+      <div class="field">
+        <label for="m_giv_spgr">Sp. Gravity</label>
+        <div class="iw">
+          <input type="text" id="m_giv_spgr" readonly aria-label="Feed specific gravity (calculated)">
+          <span class="ub">—</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="m_giv_conc">Concentration</label>
+        <div class="iw">
+          <input type="text" id="m_giv_conc" readonly aria-label="Feed concentration in g/L (calculated)">
+          <span class="ub">g/L</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target Solution -->
+    <div class="card cv">
+      <div class="sh"><span class="sh-icon" aria-hidden="true">🎯</span> Target Solution</div>
+
+      <div class="field">
+        <label for="m_req_wt">
+          Target WT%
+          <span class="range-hint">0.1 – 55 WT%</span>
+        </label>
+        <div class="iw">
+          <input
+            type="number" id="m_req_wt" value="32"
+            min="0.1" max="55" step="0.1"
+            aria-label="Target solution weight percent"
+            oninput="calcM()"
+          >
+          <span class="ub">WT%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="m_req_temp">
+          Temperature
+          <span class="range-hint">0 – 80 °C</span>
+        </label>
+        <div class="iw">
+          <input
+            type="number" id="m_req_temp" value="25"
+            min="0" max="80" step="0.5"
+            aria-label="Target solution temperature"
+            oninput="calcM()"
+          >
+          <span class="ub">°C</span>
+        </div>
+      </div>
+
+      <div class="div"></div>
+
+      <div class="field">
+        <label for="m_req_spgr">Sp. Gravity</label>
+        <div class="iw">
+          <input type="text" id="m_req_spgr" readonly aria-label="Target specific gravity (calculated)">
+          <span class="ub">—</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="m_req_conc">Concentration</label>
+        <div class="iw">
+          <input type="text" id="m_req_conc" readonly aria-label="Target concentration in g/L (calculated)">
+          <span class="ub">g/L</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Required Output -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="sh"><span class="sh-icon" aria-hidden="true">⚖️</span> Required Output</div>
+    <div style="max-width:320px">
+      <div class="field">
+        <label for="m_weight">
+          Required Product Weight
+          <span class="range-hint">0.01 – 999 999 MT</span>
+        </label>
+        <div class="iw">
+          <input
+            type="number" id="m_weight" value="25"
+            min="0.01" max="999999" step="0.1"
+            aria-label="Required product weight in metric tons"
+            oninput="calcM()"
+          >
+          <span class="ub">MT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mixing Results -->
+  <div class="card cg">
+    <div class="sh"><span class="sh-icon" aria-hidden="true">✅</span> Mixing Results</div>
+
+    <div class="pipe" aria-label="Volume flow summary">
+      <div class="pb">
+        <div class="pbl" style="color:var(--amber)">📦 Feed</div>
+        <div class="pbv" style="color:var(--amber)" id="m_pf" aria-live="polite">—</div>
+        <div class="pbs">m³</div>
+      </div>
+      <div class="pb">
+        <div class="pbl" style="color:var(--blue)">💧 Water</div>
+        <div class="pbv" style="color:var(--blue)" id="m_pw" aria-live="polite">—</div>
+        <div class="pbs">m³</div>
+      </div>
+      <div class="pb">
+        <div class="pbl" style="color:var(--green)">✅ Product</div>
+        <div class="pbv" style="color:var(--green)" id="m_pp" aria-live="polite">—</div>
+        <div class="pbs">m³</div>
+      </div>
+    </div>
+
+    <div class="rg">
+      <div class="ri rg" data-tip="Total volume of product solution">
+        <div class="rl">Required Volume</div>
+        <div class="rv" id="m_rv" aria-live="polite">—</div>
+        <div class="ru">m³</div>
+      </div>
+      <div class="ri ra" data-tip="Volume of concentrated feed to use">
+        <div class="rl">Feed Volume</div>
+        <div class="rv" id="m_fv" aria-live="polite">—</div>
+        <div class="ru">m³</div>
+      </div>
+      <div class="ri rb" data-tip="Volume of water to add for dilution">
+        <div class="rl">Water Volume</div>
+        <div class="rv" id="m_wv" aria-live="polite">—</div>
+        <div class="ru">m³</div>
+      </div>
+      <div class="ri rp" data-tip="Feed + Water — should equal Required Volume">
+        <div class="rl">Total Vol ✓</div>
+        <div class="rv" id="m_tv" aria-live="polite">—</div>
+        <div class="ru">m³</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ REFERENCE TAB ══ -->
+<div id="tab-ref" class="tp" role="tabpanel" aria-label="Reference tables">
+  <div class="g2">
+
+    <div class="card">
+      <div class="sh"><span class="sh-icon" aria-hidden="true">📋</span> WT% Conversion (25 °C)</div>
+      <div style="overflow-x:auto">
+        <table class="rt" aria-label="NaOH weight percent conversion table at 25 degrees Celsius">
+          <thead>
+            <tr>
+              <th>WT%</th>
+              <th>Sp. Gr</th>
+              <th>Conc g/L</th>
+              <th>Molarity</th>
+              <th>kg/m³</th>
+            </tr>
+          </thead>
+          <tbody id="ref_tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="card ca">
+        <div class="sh"><span class="sh-icon" aria-hidden="true">⚗️</span> NaOH Properties</div>
+        <table class="rt" aria-label="Physical and chemical properties of sodium hydroxide">
+          <tbody>
+            <tr><td>Molar Mass</td><td>40.00 g/mol</td></tr>
+            <tr><td>CAS Number</td><td>1310-73-2</td></tr>
+            <tr><td>UN Number</td><td>1824 (solution)</td></tr>
+            <tr><td>Melting Point</td><td>318 °C</td></tr>
+            <tr><td>Boiling Point</td><td>1388 °C</td></tr>
+            <tr><td>Pure Density</td><td>2130 kg/m³</td></tr>
+            <tr><td>pKa</td><td>~15.7</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="sh"><span class="sh-icon" aria-hidden="true">🏭</span> Industrial Grades</div>
+        <table class="rt" aria-label="Common industrial grades of sodium hydroxide">
+          <thead>
+            <tr><th>Grade</th><th>WT%</th><th>Sp. Gr</th><th>Use</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Diaphragm</td><td>10–12%</td><td>1.10–1.13</td><td>General</td></tr>
+            <tr><td>Membrane</td><td>30–32%</td><td>1.33</td><td>Food / Pharma</td></tr>
+            <tr><td>Concentrated</td><td>48–50%</td><td>1.50–1.53</td><td>Industrial</td></tr>
+            <tr><td>Rayon Grade</td><td>18–19%</td><td>1.20</td><td>Textile</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="sh"><span class="sh-icon" aria-hidden="true">🌡️</span> Density Matrix (kg/m³) — WT% × Temperature</div>
+    <div style="overflow-x:auto">
+      <table class="rt" id="dm_tbl" aria-label="NaOH density matrix by weight percent and temperature"></table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<div style="max-width:980px;margin:0 auto;padding:0 24px">
+  <footer>Created by Febin A Joseph &nbsp;·&nbsp; NaOH Process Calculator</footer>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   DENSITY MODEL
+══════════════════════════════════════════ */
+function dm(C, T) {
+  const base  = 1003 + 11.82*C - 0.0216*C*C;
+  const lin   = base  - (0.182   + 0.01948*C  - 0.0001744*C*C)  * T;
+  const final = lin   - (0.00263 - 0.000105*C + 0.000001048*C*C)* T*T;
+  const spGr  = final / 1000;
+  return { base, final, spGr, conc: spGr*10*C, mol: spGr*10*C/40, spVol: 1000/final };
+}
+
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+function f(v, d=3) {
+  return (isNaN(v) || !isFinite(v)) ? '—' : v.toFixed(d);
+}
+
+function an(id, val) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.textContent = val;
+  e.classList.remove('fl');
+  void e.offsetWidth;
+  e.classList.add('fl');
+}
+
+function sv(id, val) {
+  const e = document.getElementById(id);
+  if (e) e.value = val;
+}
+
+function validate(inputEl, min, max, errId) {
+  const v = parseFloat(inputEl.value);
+  const errEl = document.getElementById(errId);
+  if (isNaN(v) || v < min || v > max) {
+    inputEl.classList.add('err');
+    if (errEl) errEl.classList.add('show');
+    return false;
+  }
+  inputEl.classList.remove('err');
+  if (errEl) errEl.classList.remove('show');
+  return true;
+}
+
+/* ══════════════════════════════════════════
+   DENSITY CALCULATOR
+══════════════════════════════════════════ */
+function calcD() {
+  const wtEl   = document.getElementById('d_wt');
+  const tempEl = document.getElementById('d_temp');
+  const okWt   = validate(wtEl,   0,  55, 'd_wt_err');
+  const okTemp = validate(tempEl, 0,  80, 'd_temp_err');
+  if (!okWt || !okTemp) return;
+
+  const C = parseFloat(wtEl.value)   || 0;
+  const T = parseFloat(tempEl.value) || 0;
+  if (C <= 0) return;
+
+  const r = dm(C, T);
+  an('d_spgr', f(r.spGr,  4));
+  an('d_den',  f(r.final, 2));
+  an('d_conc', f(r.conc,  2));
+  an('d_mol',  f(r.mol,   3));
+  an('d_spv',  f(r.spVol, 4));
+  an('d_base', f(r.base,  2));
+}
+
+/* ══════════════════════════════════════════
+   MIXING CALCULATOR
+══════════════════════════════════════════ */
+function calcM() {
+  const Cg = parseFloat(document.getElementById('m_giv_wt').value)   || 0;
+  const Tg = parseFloat(document.getElementById('m_giv_temp').value) || 0;
+  const Cr = parseFloat(document.getElementById('m_req_wt').value)   || 0;
+  const Tr = parseFloat(document.getElementById('m_req_temp').value) || 0;
+  const W  = parseFloat(document.getElementById('m_weight').value)   || 0;
+
+  if (Cg <= 0 || Cr <= 0 || W <= 0) return;
+
+  const G = dm(Cg, Tg);
+  const R = dm(Cr, Tr);
+
+  sv('m_giv_spgr', f(G.spGr, 4));
+  sv('m_giv_conc', f(G.conc, 2));
+  sv('m_req_spgr', f(R.spGr, 4));
+  sv('m_req_conc', f(R.conc, 2));
+
+  const Vreq  = W / R.spGr;
+  const Vfeed = Vreq * R.conc / G.conc;
+  const Vwater = Vreq - Vfeed;
+  const Vtot  = Vfeed + Vwater;
+
+  an('m_rv', f(Vreq,   3)); an('m_fv', f(Vfeed,  3));
+  an('m_wv', f(Vwater, 3)); an('m_tv', f(Vtot,   3));
+  an('m_pf', f(Vfeed,  2)); an('m_pw', f(Vwater, 2));
+  an('m_pp', f(Vreq,   2));
+}
+
+/* ══════════════════════════════════════════
+   REFERENCE TABLES
+══════════════════════════════════════════ */
+function buildRef() {
+  const wts = [5,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50];
+  document.getElementById('ref_tbody').innerHTML = wts.map(C => {
+    const r = dm(C, 25);
+    const hl = (C === 32 || C === 48) ? ' class="hl"' : '';
+    return `<tr${hl}><td>${C}%</td><td>${f(r.spGr,4)}</td><td>${f(r.conc,1)}</td><td>${f(r.mol,3)}</td><td>${f(r.final,1)}</td></tr>`;
+  }).join('');
+
+  const W2 = [10,15,20,25,30,32,35,40,45,48,50];
+  const T2 = [5,10,15,20,25,30,40,50,60];
+  const tbl = document.getElementById('dm_tbl');
+  let h = `<thead><tr><th>WT% / T °C</th>${T2.map(t => `<th>${t} °C</th>`).join('')}</tr></thead><tbody>`;
+  W2.forEach(C => {
+    h += `<tr><td>${C}%</td>${T2.map(T => `<td>${f(dm(C,T).final,1)}</td>`).join('')}</tr>`;
+  });
+  tbl.innerHTML = h + '</tbody>';
+}
+
+/* ══════════════════════════════════════════
+   TAB SWITCHER
+══════════════════════════════════════════ */
+function sw(n, b) {
+  document.querySelectorAll('.tp').forEach(p => {
+    p.classList.remove('on');
+  });
+  document.querySelectorAll('.tb').forEach(x => {
+    x.classList.remove('on');
+    x.setAttribute('aria-selected', 'false');
+  });
+  document.getElementById('tab-' + n).classList.add('on');
+  b.classList.add('on');
+  b.setAttribute('aria-selected', 'true');
+}
+
+/* ══════════════════════════════════════════
+   DARK / LIGHT MODE TOGGLE
+══════════════════════════════════════════ */
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeBtn');
+  if (btn) {
+    btn.textContent = theme === 'dark' ? '🌙' : '☀️';
+    btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  }
+  try { localStorage.setItem('naoh-theme', theme); } catch(e) {}
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  // Restore saved theme preference
+  let saved = 'dark';
+  try { saved = localStorage.getItem('naoh-theme') || 'dark'; } catch(e) {}
+  applyTheme(saved);
+
+  calcD();
+  calcM();
+  buildRef();
+});
+</script>
+</body>
+</html>

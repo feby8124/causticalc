@@ -1,0 +1,17 @@
+{
+  "name": "NaOH Process Calculator",
+  "short_name": "NaOH Calc",
+  "description": "Industrial suite for Caustic Soda density and mixing calculations.",
+  "start_url": "./NaOH_Calculator_Improved.html",
+  "display": "standalone",
+  "background_color": "#070d18",
+  "theme_color": "#00d4ff",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/4341/4341112.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
