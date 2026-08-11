@@ -1,7 +1,7 @@
 {
-  "name": "CaustiCalc",
-  "short_name": "CaustiCalc",
-  "description": "Professional NaOH Process & Density Calculator",
+  "name": "processlab",
+  "short_name": "processlab",
+  "description": "Processlab
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#070d18",
